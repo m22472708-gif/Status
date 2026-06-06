@@ -12,14 +12,21 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Health check endpoint
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", message: "Shobdokolpo API is running" });
+  });
+
   // Use Groq API
   app.post("/api/generate-caption", async (req, res) => {
+    console.log("Received generation request:", req.body);
     try {
       const { category, vibe, length, prompt, count = 1 } = req.body;
-      const apiKey = process.env.GROQ_API_KEY || "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";
-
-      if (!apiKey) {
-        return res.status(400).json({ error: "API Key missing. Please provide GROQ_API_KEY in the Secrets tab in Settings." });
+      let apiKey = process.env.GROQ_API_KEY;
+      
+      // Fallback key if not in env
+      if (!apiKey || apiKey.trim() === "") {
+        apiKey = "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";
       }
 
       const groq = new Groq({ apiKey });
@@ -90,4 +97,7 @@ Rules:
   });
 }
 
-startServer();
+startServer().catch(err => {
+  console.error("CRITICAL: Failed to start server:", err);
+  process.exit(1);
+});

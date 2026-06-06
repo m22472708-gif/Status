@@ -51,7 +51,14 @@ export default function AIGeneratorPage({ onBack, onGoHome, onDesign, onGenerate
         body: JSON.stringify({ category, vibe, length: size, prompt, count })
       });
       
-      const data = await response.json();
+      const responseText = await response.text();
+      let data;
+      
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseErr) {
+        throw new Error(`Server returned invalid response. Please try again. (Details: ${responseText.substring(0, 50)}...)`);
+      }
       
       if (!response.ok) {
         throw new Error(data.error || 'Failed to generate caption');
