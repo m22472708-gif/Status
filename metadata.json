@@ -1,0 +1,6 @@
+{
+  "name": "Shabdanjali - শব্দাঞ্জলি",
+  "description": "A beautiful Bengali offline/online status and caption generator with AI capabilities, custom image template maker, and 5000+ categorized statuses.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
