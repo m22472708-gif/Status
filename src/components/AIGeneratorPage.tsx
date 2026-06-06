@@ -45,26 +45,45 @@ export default function AIGeneratorPage({ onBack, onGoHome, onDesign, onGenerate
     setError('');
     
     try {
-      const response = await fetch('/api/generate-caption', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category, vibe, length: size, prompt, count })
-      });
-      
-      const responseText = await response.text();
       let data;
-      
+      let usedFallback = false;
+
       try {
-        data = JSON.parse(responseText);
-      } catch (parseErr) {
-        throw new Error(`Server returned invalid response. Please try again. (Details: ${responseText.substring(0, 50)}...)`);
+        const response = await fetch('/api/generate-caption', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ category, vibe, length: size, prompt, count })
+        });
+        
+        const responseText = await response.text();
+        
+        if (response.status === 404 || responseText.includes("NOT_FOUND") || responseText.includes("could not be found") || responseText.includes("Cannot POST")) {
+          // Fallback to client-side direct Groq call
+          usedFallback = true;
+          data = await callGroqDirectly();
+        } else {
+          try {
+            data = JSON.parse(responseText);
+          } catch (parseErr) {
+            throw new Error(`Server returned invalid response. Please try again. (Details: ${responseText.substring(0, 50)}...)`);
+          }
+          
+          if (!response.ok) {
+            throw new Error(data.error || 'Failed to generate caption');
+          }
+        }
+      } catch (backendErr: any) {
+        // If it's a network error or routing error, try the client-side direct call
+        console.warn("Backend API failed, trying direct client-side fallback...", backendErr);
+        usedFallback = true;
+        try {
+          data = await callGroqDirectly();
+        } catch (fallbackErr: any) {
+          throw new Error(fallbackErr.message || backendErr.message || "Failed to generate caption");
+        }
       }
       
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate caption');
-      }
-      
-      const captions = data.captions || [];
+      const captions = data?.captions || [];
       setGeneratedTexts(captions);
       if (captions.length > 0) {
         // We notify Success but it no longer redirects or adds to home
@@ -74,6 +93,65 @@ export default function AIGeneratorPage({ onBack, onGoHome, onDesign, onGenerate
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const callGroqDirectly = async () => {
+    const apiKey = "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";
+    
+    let lengthInstruction = "Keep it very short and punchy (max 10-12 words).";
+    if (size === "medium") lengthInstruction = "Keep it moderate (20-30 words).";
+    if (size === "long") lengthInstruction = "Make it deep, poetic and detailed (50+ words).";
+
+    const systemPrompt = `You are an expert Bengali creative writer. 
+Generate exactly ${count} unique, high-quality social media status(es) in Bengali.
+Category: ${category}
+Vibe: ${vibe}
+Length: ${lengthInstruction}
+
+Rules:
+1. Language: Elegant Bengali (Cholitobhasha).
+2. Poetic: Use metaphors and emotional depth.
+3. Emojis: End each status with 1-2 simple, relevant emojis.
+4. JSON ONLY: Return ONLY a JSON object: {"captions": ["status 1", "status 2", ...]}. No text before or after.
+`;
+
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: prompt ? `Topic Context: ${prompt}` : "Generate beautiful Bengali statuses." }
+        ],
+        model: "llama-3.3-70b-versatile",
+        temperature: 0.8,
+        max_tokens: 2048,
+        response_format: { type: "json_object" }
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      let errMsg = "Failed to connect to Groq API directly.";
+      try {
+        const errJson = JSON.parse(errText);
+        errMsg = errJson.error?.message || errMsg;
+      } catch (_) {}
+      throw new Error(errMsg);
+    }
+
+    const resText = await response.text();
+    try {
+      const resData = JSON.parse(resText);
+      const content = resData.choices?.[0]?.message?.content || '{"captions": []}';
+      const cleanedContent = content.replace(/```json\n?|```/g, '').trim();
+      return JSON.parse(cleanedContent);
+    } catch (_) {
+      throw new Error("Unable to parse generated statuses. Please retry.");
     }
   };
 
