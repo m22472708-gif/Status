@@ -19,7 +19,7 @@ async function startServer() {
       const apiKey = process.env.GROQ_API_KEY || "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";
 
       if (!apiKey) {
-        return res.status(400).json({ error: "API Key missing. Please provide GROQ_API_KEY." });
+        return res.status(400).json({ error: "API Key missing. Please provide GROQ_API_KEY in the Secrets tab in Settings." });
       }
 
       const groq = new Groq({ apiKey });

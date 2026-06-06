@@ -257,6 +257,76 @@ export default function App() {
                     </button>
                   )}
                 </div>
+
+                {/* Live Search Quick Results Dropdown */}
+                <AnimatePresence>
+                  {searchQuery.length >= 2 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute top-full left-0 right-0 mt-4 bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden z-[100] max-h-[60vh] overflow-y-auto custom-scrollbar"
+                    >
+                      <div className="p-6 border-b border-white/5 flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                          <Search size={14} />
+                          সার্চ রেজাল্ট ({filteredStatuses.length})
+                        </h3>
+                        <button 
+                          onClick={() => {
+                            setSearchQuery('');
+                            scrollToContent();
+                          }}
+                          className="text-[10px] uppercase font-bold text-slate-500 hover:text-white transition-colors"
+                        >
+                          Clear All
+                        </button>
+                      </div>
+                      
+                      <div className="p-2">
+                        {filteredStatuses.length > 0 ? (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            {filteredStatuses.slice(0, 10).map((status) => (
+                              <button
+                                key={status.id}
+                                onClick={() => {
+                                  setSelectedStatusForImage(status);
+                                  setCurrentView('editor');
+                                }}
+                                className="group w-full text-left p-4 rounded-2xl hover:bg-white/5 transition-all flex items-start gap-4 border border-transparent hover:border-white/5"
+                              >
+                                <div className={cn(
+                                  "w-10 h-10 rounded-xl bg-gradient-to-tr flex-shrink-0 flex items-center justify-center text-white font-bold opacity-80 group-hover:opacity-100 transition-opacity",
+                                  categoryColors[status.category] || "from-slate-600 to-slate-700"
+                                )}>
+                                  {status.category.charAt(0)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-slate-200 text-sm font-bangla line-clamp-2 leading-relaxed">{status.text}</p>
+                                  <span className="text-[10px] text-slate-500 uppercase mt-1 inline-block">{status.category}</span>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="py-20 text-center">
+                            <Layers className="mx-auto text-slate-700 mb-4" size={48} />
+                            <p className="text-slate-400 font-bangla">দুঃখিত, কোনো স্ট্যাটাস পাওয়া যায়নি!</p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {filteredStatuses.length > 10 && (
+                        <button 
+                          onClick={scrollToContent}
+                          className="w-full py-4 bg-white/5 text-indigo-400 text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-colors border-t border-white/5"
+                        >
+                          আরও {filteredStatuses.length - 10}টি দেখতে নিচে যান
+                        </button>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </motion.div>
           </div>
