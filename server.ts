@@ -14,7 +14,7 @@ async function startServer() {
 
   // Health check endpoint
   app.get("/api/health", (req, res) => {
-    res.json({ status: "ok", message: "Shobdokolpo API is running" });
+    res.json({ status: "ok", message: "Shobdanjoli API is running" });
   });
 
   // Use Groq API

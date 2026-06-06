@@ -50,7 +50,7 @@ export default function ImageEditorPage({ initialStatus, onBack, onGoHome, onOpe
   const [fontSize, setFontSize] = useState(32);
   const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right'>('center');
   const [textColor, setTextColor] = useState<'default' | 'white' | 'black'>('default');
-  const [watermark, setWatermark] = useState('শব্দকল্প');
+  const [watermark, setWatermark] = useState('শব্দাঞ্জলি');
   const [customImage, setCustomImage] = useState<string | null>(null);
   const [overlayOpacity, setOverlayOpacity] = useState(50);
   
@@ -101,7 +101,7 @@ export default function ImageEditorPage({ initialStatus, onBack, onGoHome, onOpe
         backgroundColor: 'rgba(0,0,0,0)'
       });
       const link = document.createElement("a");
-      link.download = `shobdokolpo-studio-${Date.now()}.png`;
+      link.download = `shobdanjoli-studio-${Date.now()}.png`;
       link.href = dataUrl;
       document.body.appendChild(link);
       link.click();
